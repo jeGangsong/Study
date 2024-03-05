@@ -1,133 +1,99 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include <unordered_map>
-#include <string>
-#include <algorithm>
 #include <vector>
-#include <utility>
+#include <algorithm>
+
 using namespace std;
 
-int arr[1000][1000];
-int dp[1000][1000];
-int path[1000][1000];
-int dx[3] = {0, -1,0 };
-int dy[3] = {0, 0,-1 };
-int N;
-vector<pair<int, int>> v;
+struct Package {
+    int cnt, price;
+    Package() {}
+    Package(int c, int p) : cnt(c), price(p) {}
+};
 
-//Top-down 
-int ydir[2] = { 0,1 };
-int xdir[2] = { 1,0 };
+struct Product {
+    Package smallPackage, bigPackage;
+    Product() {}
+    Product(const Package& small, const Package& big) : smallPackage(small), bigPackage(big) {}
+};
 
-int func(int y, int x) {
+int N, M;
+vector<int> needList, haveProduct;
+vector<Product> packages;
+int ans = 0;
 
-	if (y >= N || x >= N) return 21e8;
-	if (y == N - 1 && x == N - 1) return 0;
+void set() {
+    cin >> N >> M;
+    needList.resize(N);
+    haveProduct.resize(N);
+    packages.resize(N);
 
-	if (dp[y][x] != 0) return dp[y][x];
+    for (int i = 0; i < N; i++) {
+        int need, have, smallCnt, smallPrice, bigCnt, bigPrice;
+        cin >> need >> have >> smallCnt >> smallPrice >> bigCnt >> bigPrice;
+        needList[i] = need;
+        haveProduct[i] = have;
+        packages[i] = Product(Package(smallCnt, smallPrice), Package(bigCnt, bigPrice));
+    }
+}
 
-	int minval = 21e8;
+bool canMake(int expectBomb) {
+    int limitMoney = M;
+    for (int i = 0; i < N; i++) {
+        int needProduct = (needList[i] * expectBomb) - haveProduct[i];
+        if (needProduct > 0) {
+            int limit_bigPackage = needProduct / packages[i].bigPackage.cnt;
+            if (needProduct % packages[i].bigPackage.cnt != 0)
+                limit_bigPackage += 1;
 
-	for (int i = 0; i < 2; i++) {
-		int temp = func(y + ydir[i], x + xdir[i]);
-		if (temp < minval) {
-			minval = temp;
-			path[y][x] = i;
-		}
-	}
-	dp[y][x] = minval+arr[y][x];
-	return dp[y][x];
+            int limit_smallPackage = needProduct / packages[i].smallPackage.cnt;
+            if (needProduct % packages[i].smallPackage.cnt != 0)
+                limit_smallPackage += 1;
 
+            int spentMoney = INT_MAX;
+
+            for (int k = 0; k <= limit_bigPackage; k++) {
+                for (int z = limit_smallPackage; z >= 0; z--) {
+                    if ((k * packages[i].bigPackage.cnt) + (z * packages[i].smallPackage.cnt) >= needProduct) {
+                        spentMoney = min(spentMoney, (k * packages[i].bigPackage.price) + (z * packages[i].smallPackage.price));
+                        //limit_smallPackage = z;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            limitMoney -= spentMoney;
+        }
+        if (limitMoney < 0) return false;
+    }
+    return true;
+}
+
+void solve() {
+    int left = 0;
+    int right = 100;
+
+    while (left <= right) {
+        int expectBomb = (left + right) / 2;
+        if (canMake(expectBomb)) {
+            ans = expectBomb;
+            left = expectBomb + 1;
+        }
+        else {
+            right = expectBomb - 1;
+        }
+    }
+    cout << ans << " ";
 }
 
 int main() {
-
-	ios::sync_with_stdio(false);
-	cin.tie(NULL);
-
-	freopen("input.txt", "r", stdin);
-
-	cin >> N;
-
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			cin >> arr[i][j];
-		}
-	}
-
-	// Bottom-Up
-
-	//dp[0][0] = arr[0][0];
-
-	/*for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			if (i == 0 && j == 0) continue;
-			else if(i==0) {
-				dp[i][j] = dp[i][j - 1]+arr[i][j];
-				path[i][j] = 1; // аб
-			}
-			else if (j == 0) {
-				dp[i][j] = dp[i - 1][j]+arr[i][j];
-				path[i][j] = 2; // ю╖
-			}
-			else {
-				if (dp[i - 1][j] + arr[i][j] <= dp[i][j - 1] + arr[i][j]) {
-					dp[i][j] = dp[i - 1][j] + arr[i][j];
-					path[i][j] = 2; //ю╖
-				}
-				else {
-					dp[i][j] = dp[i][j-1] + arr[i][j];
-					path[i][j] = 1; //аб
-				}
-			}
-		}
-	}*/
-
-	/*int y = N - 1;
-	int x = N - 1;
-
-	v.push_back({ N - 1,N - 1 });
-
-	while (y != 0 || x != 0) {
-		int d = path[y][x];
-
-		int nx = x + dx[d];
-		int ny = y + dy[d];
-
-		v.push_back({ ny,nx });
-		y = ny;
-		x = nx;
-	}
-
-	cout << dp[N - 1][N - 1] << "\n";
-
-	while (!v.empty()) {
-		cout << v.back().first << "," << v.back().second << "\n";
-		v.pop_back();
-	}*/
-
-	// Top-Down 
-	int ans = func(0, 0);
-	cout << ans << "\n";
-
-	int y = 0;
-	int x = 0;
-
-	v.push_back({ N - 1,N - 1 });
-
-	while (y != N-1 || x != N-1) {
-		int d = path[y][x];
-
-		cout << y << "," << x << "\n";
-
-		int nx = x + xdir[d];
-		int ny = y + ydir[d];
-
-		y = ny;
-		x = nx;
-	}
-
-	cout << y << "," << x << "\n";
-	
-
+    
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    freopen("input.txt", "r", stdin);
+    set();
+    solve();
+    return 0;
 }
