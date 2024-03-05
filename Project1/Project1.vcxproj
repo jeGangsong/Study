@@ -130,9 +130,6 @@
   <ItemGroup>
     <Text Include="input.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="보석가게.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
