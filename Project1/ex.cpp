@@ -1,133 +1,73 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include <unordered_map>
-#include <string>
+#include<cstring> // c¿¡¼­ »ç¿ëÇÏ´Â char []
+#include<queue>
 #include <algorithm>
-#include <vector>
 #include <utility>
 using namespace std;
 
-int arr[1000][1000];
-int dp[1000][1000];
-int path[1000][1000];
-int dx[3] = {0, -1,0 };
-int dy[3] = {0, 0,-1 };
-int N;
-vector<pair<int, int>> v;
+struct Print {
+	int idx;
+	int start;
+	int end;
 
-//Top-down 
-int ydir[2] = { 0,1 };
-int xdir[2] = { 1,0 };
-
-int func(int y, int x) {
-
-	if (y >= N || x >= N) return 21e8;
-	if (y == N - 1 && x == N - 1) return 0;
-
-	if (dp[y][x] != 0) return dp[y][x];
-
-	int minval = 21e8;
-
-	for (int i = 0; i < 2; i++) {
-		int temp = func(y + ydir[i], x + xdir[i]);
-		if (temp < minval) {
-			minval = temp;
-			path[y][x] = i;
-		}
+	bool operator<(Print a) const {
+		return idx > a.idx;
 	}
-	dp[y][x] = minval+arr[y][x];
-	return dp[y][x];
+};
+int N, M;
+int s, e;
+vector<Print> v;
+priority_queue<Print> pq;
+
+bool cmp(Print left, Print right) {
+
+	return left.start > right.start;
 
 }
-
 int main() {
-
-	ios::sync_with_stdio(false);
-	cin.tie(NULL);
-
 	freopen("input.txt", "r", stdin);
 
 	cin >> N;
 
+	int answer = 0;
+
 	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			cin >> arr[i][j];
+		int A, T;
+
+		cin >> A >> T;
+
+		v.push_back({ i, A,T });
+	}
+
+	sort(v.begin(), v.end(), cmp);
+
+	int old_start = v.back().start;
+	int old_endtime = v.back().start+v.back().end;
+	v.pop_back();
+
+	while (!v.empty() || !pq.empty()) {
+
+		
+		while (!v.empty() && v.back().start <= old_endtime) {
+			Print now = v.back();
+			v.pop_back();
+			pq.push(now);
+		}
+
+		if (!v.empty() && pq.empty()) {
+			Print now = v.back();
+			v.pop_back();
+			old_endtime = now.start + now.end;
+		}
+
+		else if(!pq.empty()) {
+			Print cur = pq.top();
+			pq.pop();
+
+			answer = max(answer, old_endtime - cur.start);
+			old_endtime += cur.end;
 		}
 	}
-
-	// Bottom-Up
-
-	//dp[0][0] = arr[0][0];
-
-	/*for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			if (i == 0 && j == 0) continue;
-			else if(i==0) {
-				dp[i][j] = dp[i][j - 1]+arr[i][j];
-				path[i][j] = 1; // ÁÂ
-			}
-			else if (j == 0) {
-				dp[i][j] = dp[i - 1][j]+arr[i][j];
-				path[i][j] = 2; // À§
-			}
-			else {
-				if (dp[i - 1][j] + arr[i][j] <= dp[i][j - 1] + arr[i][j]) {
-					dp[i][j] = dp[i - 1][j] + arr[i][j];
-					path[i][j] = 2; //À§
-				}
-				else {
-					dp[i][j] = dp[i][j-1] + arr[i][j];
-					path[i][j] = 1; //ÁÂ
-				}
-			}
-		}
-	}*/
-
-	/*int y = N - 1;
-	int x = N - 1;
-
-	v.push_back({ N - 1,N - 1 });
-
-	while (y != 0 || x != 0) {
-		int d = path[y][x];
-
-		int nx = x + dx[d];
-		int ny = y + dy[d];
-
-		v.push_back({ ny,nx });
-		y = ny;
-		x = nx;
-	}
-
-	cout << dp[N - 1][N - 1] << "\n";
-
-	while (!v.empty()) {
-		cout << v.back().first << "," << v.back().second << "\n";
-		v.pop_back();
-	}*/
-
-	// Top-Down 
-	int ans = func(0, 0);
-	cout << ans << "\n";
-
-	int y = 0;
-	int x = 0;
-
-	v.push_back({ N - 1,N - 1 });
-
-	while (y != N-1 || x != N-1) {
-		int d = path[y][x];
-
-		cout << y << "," << x << "\n";
-
-		int nx = x + xdir[d];
-		int ny = y + ydir[d];
-
-		y = ny;
-		x = nx;
-	}
-
-	cout << y << "," << x << "\n";
-	
-
+	cout << answer << "\n";
 }
