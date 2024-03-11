@@ -94,13 +94,22 @@ public:
 				node = node->right;
 			}
 			nodeParent->data = node->data;
-			
+
 			if (node->parent->left != nullptr && node->parent->left->data == node->data) {
-				node->parent->left = nullptr;
+				if (node->left != nullptr) {
+					node->parent->left = node->left;
+					node->left->parent = node->parent;
+				}
+				else node->parent->left = nullptr;
 			}
 			else {
-				node->parent->right = nullptr;
+				if (node->left != nullptr) {
+					node->parent->right = node->left;
+					node->left->parent = node->parent;
+				}
+				else node->parent->right = nullptr;
 			}
+
 			treeSize--;
 			delete node;
 			return;
@@ -133,7 +142,11 @@ public:
 					node = node->right;
 				}
 				targetNode->data = node->data;
-				node->parent->right = nullptr;
+				if (node->left != nullptr) {
+					node->parent->left = node->left;
+					node->left->parent = node->parent;
+				}
+				else node->parent->left = nullptr;
 
 				treeSize--;
 				delete node;
@@ -149,10 +162,18 @@ public:
 				//targetNode와 target보다 바로 작은 data와 바꾼다.
 				targetNode->data = node->data;
 				if (node->parent->left != nullptr && node->parent->left->data == node->data) {
-					node->parent->left = nullptr;
+					if (node->left != nullptr) {
+						node->parent->left = node->left;
+						node->left->parent = node->parent;
+					}
+					else node->parent->left = nullptr;
 				}
 				else {
-					node->parent->right = nullptr;
+					if (node->left != nullptr) {
+						node->parent->right = node->left;
+						node->left->parent = node->parent;
+					}
+					else node->parent->right = nullptr;
 				}	
 				treeSize--;
 				delete node;
@@ -232,20 +253,19 @@ public:
 
 int main() {
 
-	Node<int>* root = new Node<int>(6);
+	Node<int>* root = new Node<int>(30);
 
 	BST<int> bst(root);
 
-	bst.insert(7);
-	bst.insert(10);
-	bst.insert(8);
-	bst.insert(3);
+	bst.insert(20);
+	bst.insert(15);
+	bst.insert(25);
+	bst.insert(21);
 	bst.insert(2);
 
 	bst.inorder(root);
 
-	bst.remove(3);
-	bst.remove(6);
+	bst.remove(30);
 
 
 	Node<int>* ptr = bst.SearchNode(6);
